@@ -1,8 +1,6 @@
 package midware
 
-import (
-	"net/http"
-)
+import "net/http"
 
 // Wrapper wrap a http.HandlerFunc for decorating
 // param is for wrapping,
@@ -12,9 +10,11 @@ type Wrapper func(http.HandlerFunc) http.HandlerFunc
 // Wrap could use different wraps to decorate a http.HandlerFunc,
 // like wanting a log,outh check,params check and so on
 func Wrap(h http.HandlerFunc, wrappers ...Wrapper) http.HandlerFunc {
-	for _, wrap := range wrappers {
+	// reverse to wrap,more readable,like Wrap(index,log(x),auth(x)...)
 
-		h = wrap(h)
+	for i := len(wrappers) - 1; i >= 0; i-- {
+
+		h = wrappers[i](h)
 	}
 	return h
 }
@@ -31,7 +31,6 @@ type OriginChecker interface {
 func CheckOrigin(checker OriginChecker) Wrapper {
 	return func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-
 			if checker.OriginCheck(w, r) {
 				h(w, r)
 				return
@@ -53,7 +52,6 @@ type Tokener interface {
 func CheckToken(tokener Tokener) Wrapper {
 	return func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-
 			if tokener.TokenCheck(w, r) {
 				h(w, r)
 				return
